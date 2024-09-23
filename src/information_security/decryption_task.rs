@@ -18,6 +18,8 @@ pub fn decrypt(filename: String) {
         }
         println!()
     }
+    println!("--------------- KEY ---------------");
+
     let mut key = String::new();
 
     for i in 6..9 {
@@ -25,7 +27,6 @@ pub fn decrypt(filename: String) {
     }
     let num = i64::from_str_radix(&key, 16).unwrap();
 
-    println!("--------------- KEY ---------------");
     println!("{}", num);
 }
 
