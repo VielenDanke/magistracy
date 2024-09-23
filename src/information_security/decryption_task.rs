@@ -39,7 +39,7 @@ mod tests {
 
     #[test]
     fn decrypt_success() {
-        let paths = fs::read_dir(".").unwrap();
+        let paths = fs::read_dir("./src/information_security").unwrap();
 
         for path in paths {
             if let Ok(path) = path.as_ref() {
