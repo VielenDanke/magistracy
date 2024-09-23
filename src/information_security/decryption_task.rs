@@ -14,10 +14,7 @@ pub fn decrypt(filename: String) {
         let row = format!("{:08b}", buff[i]);
 
         for (j, bit) in row.chars().skip(1).take(6).enumerate() {
-            print!("{}", bit);
-            if j < 5 {
-                print!(",");
-            }
+            print!("{}{}", bit, if j < 5 {","} else {""});
         }
         println!()
     }
