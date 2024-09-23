@@ -10,11 +10,15 @@ pub fn decrypt(filename: String) {
 
     println!("--------------- MATRIX ---------------");
 
+    let suffix_fn = |idx| {
+        if idx < 5 {","} else {""}
+    };
+
     for i in 0..6 {
         let row = format!("{:08b}", buff[i]);
 
         for (j, bit) in row.chars().skip(1).take(6).enumerate() {
-            print!("{}{}", bit, if j < 5 {","} else {""});
+            print!("{}{}", bit, suffix_fn(j));
         }
         println!()
     }
