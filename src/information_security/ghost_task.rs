@@ -19,8 +19,8 @@ fn encryption_round(input_left: u64, input_right: u64, round_key: u64, s_box: &V
 }
 
 fn decryption_round(input_left: u64, input_right: u64, round_key: u64, s_box: &Vec<Vec<u64>>) -> (u64, u64) {
-    let mut output_right = input_left;
-    let mut output_left = input_right ^ f(input_left, round_key, s_box);
+    let output_right = input_left;
+    let output_left = input_right ^ f(input_left, round_key, s_box);
     (output_left, output_right)
 }
 
@@ -49,10 +49,10 @@ fn decrypt(block: u64, key: &Vec<u64>, s_box: &Vec<Vec<u64>>) -> u64 {
 #[cfg(test)]
 mod tests {
     use crate::information_security::ghost_task::{decrypt, encrypt};
+    use std::time::Instant;
 
     #[test]
     fn decrypt_success() {
-        let s_mod: u64 = 1 << 32;
         let s_box = vec![vec![4, 10, 9, 2, 13, 8, 0, 14, 6, 11, 1, 12, 7, 15, 5, 3],
                          vec![14, 11, 4, 12, 6, 13, 15, 10, 2, 3, 8, 1, 0, 7, 5, 9],
                          vec![5, 8, 1, 13, 10, 3, 4, 2, 14, 15, 12, 7, 6, 0, 9, 11],
@@ -63,16 +63,22 @@ mod tests {
                          vec![1, 15, 13, 0, 5, 7, 10, 4, 9, 2, 3, 14, 6, 11, 8, 12]];
         let s_key: Vec<u64> = vec![0xFFFFFFFF, 0x12345678, 0x00120477, 0x77AE441F, 0x81C63123, 0x99DEEEEE, 0x09502978, 0x68FA3105];
         let data = 0xFE12847EFE12847Eu64;
-        let key = vec![0xFFFFFFFF, 0x12345678, 0x00120477, 0x77AE441F, 0x81C63123, 0x99DEEEEE, 0x09502978, 0x68FA3105];
         let g = 128 * 1024;
         let mut ct = 0;
 
-        for i in 0usize..g {
-            ct = encrypt(data, &key, &s_box);
-        }
-        let decrypted = decrypt(ct, &key, &s_box);
+        let start_encryption_time = Instant::now();
 
-        println!("To encrypt: {}", data);
-        println!("Decrypted: {}", decrypted);
+        for _ in 0usize..g {
+            ct = encrypt(data, &s_key, &s_box);
+        }
+        println!("Encryption time: {:.2?}", start_encryption_time.elapsed());
+
+        let start_decryption_time = Instant::now();
+
+        let decrypted = decrypt(ct, &s_key, &s_box);
+
+        println!("Decryption time: {:.2?}", start_decryption_time.elapsed());
+
+        assert_eq!(data, decrypted);
     }
 }
