@@ -1,9 +1,21 @@
+/*
+Принимает правую часть блока (right), ключ раунда (k_i) и S-блоки (s_box).
+Складывает right с ключом раунда по модулю 2^32 (& 0xFFFFFFFF).
+Применяет S-блоки к результату (подробнее о функции s ниже).
+Циклически сдвигает результат на 11 бит влево.
+ */
 fn f(mut right: u64, k_i: u64, s_box: &Vec<Vec<u64>>) -> u64 {
     right = (right + k_i) & 0xFFFFFFFF;
     right = s(right, s_box);
     ((right << 11) & 0xFFFFFFFF) | (right >> 21)
 }
 
+/*
+Реализует подстановку с помощью S-блоков.
+Разбивает right на 8 4-битных блоков.
+Каждый блок используется как индекс для выбора значения из соответствующего S-блока.
+Результаты объединяются в 32-битное слово.
+ */
 fn s(right: u64, s_box: &Vec<Vec<u64>>) -> u64 {
     let mut result = 0;
     for i in 0usize..8 {
@@ -12,6 +24,14 @@ fn s(right: u64, s_box: &Vec<Vec<u64>>) -> u64 {
     result
 }
 
+/*
+Реализуют один раунд шифрования/дешифрования.
+В шифровании:
+Левая часть выходного блока равна правой части входного.
+Правая часть выходного блока равна XOR левой части входного блока и результату функции f.
+
+В дешифровании порядок операций меняется (правая часть становится левой и наоборот).
+ */
 fn encryption_round(input_left: u64, input_right: u64, round_key: u64, s_box: &Vec<Vec<u64>>) -> (u64, u64) {
     let output_left = input_right;
     let output_right = input_left ^ f(input_right, round_key, s_box);
@@ -24,6 +44,16 @@ fn decryption_round(input_left: u64, input_right: u64, round_key: u64, s_box: &V
     (output_left, output_right)
 }
 
+/*
+Реализуют полный цикл шифрования/дешифрования.
+Разбивают 64-битный блок на левую и правую части.
+Выполняют 32 раунда шифрования/дешифрования.
+В шифровании используется схема расширения ключа: первые 24 раунда ключи циклически повторяются,
+а в последних 8 раундах ключи используются в обратном порядке.
+
+В дешифровании используется немного другая схема расширения ключа.
+Объединяют левую и правую части в 64-битный результат.
+ */
 fn encrypt(block: u64, key: &Vec<u64>, s_box: &Vec<Vec<u64>>) -> u64 {
     let (mut left, mut right) = (block >> 32, block & 0xFFFFFFFF);
     for i in 0usize..32 {
@@ -63,14 +93,11 @@ mod tests {
                          vec![1, 15, 13, 0, 5, 7, 10, 4, 9, 2, 3, 14, 6, 11, 8, 12]];
         let s_key: Vec<u64> = vec![0xFFFFFFFF, 0x12345678, 0x00120477, 0x77AE441F, 0x81C63123, 0x99DEEEEE, 0x09502978, 0x68FA3105];
         let data = 0xFE12847EFE12847Eu64;
-        let g = 128 * 1024;
-        let mut ct = 0;
 
         let start_encryption_time = Instant::now();
 
-        for _ in 0usize..g {
-            ct = encrypt(data, &s_key, &s_box);
-        }
+        let ct = encrypt(data, &s_key, &s_box);
+
         println!("Encryption time: {:.2?}", start_encryption_time.elapsed());
 
         let start_decryption_time = Instant::now();
