@@ -1,7 +1,7 @@
 /*
 Result in matrix, where:
-row[0] by col 1..col_len - encoded bits
-rows 1..n by col 0 - control bits
+row[0][1 to col_len] - encoded bits
+rows[1 to row_len][0] - control bits
  */
 pub fn encode(bits: Vec<u8>) -> Vec<Vec<u8>> {
     let n = bits.len();
