@@ -4,8 +4,8 @@ struct GostCypher {
 }
 
 impl GostCypher {
+    // Инициализируем массив S-Boxes
     fn new() -> Self {
-        // Central Bank of Russian Federation S-boxes
         let s_box = [
             [4, 10, 9, 2, 13, 8, 0, 14, 6, 11, 1, 12, 7, 15, 5, 3],
             [14, 11, 4, 12, 6, 13, 15, 10, 2, 3, 8, 1, 0, 7, 5, 9],
@@ -19,12 +19,17 @@ impl GostCypher {
         GostCypher { s_box }
     }
 
+    // Реализует функцию `f` алгоритма ГОСТ 28147-89.
+    // Принимает правую половину блока данных (`right`) и раундовый ключ (`k_i`) в качестве входных данных.
+    // Выполняет сложение по модулю 2, подстановку с помощью S-блоков и циклический сдвиг.
     fn f(&self, right: u32, k_i: u32) -> u32 {
         let mut right = right.wrapping_add(k_i) & 0xFFFFFFFF;
         right = self.s(right);
         ((right << 11) & 0xFFFFFFFF) | (right >> 21)
     }
 
+    // Выполняет подстановку байтов правой половины блока данных с помощью S-блоков.
+    // Каждый байт заменяется на соответствующее значение из S-блока.
     fn s(&self, right: u32) -> u32 {
         let mut result = 0;
         for i in 0..8 {
@@ -34,18 +39,25 @@ impl GostCypher {
         result
     }
 
+    // Выполняет один раунд шифрования.
+    // Принимает левую и правую половины блока данных и раундовый ключ в качестве входных данных.
+    // Возвращает новые значения левой и правой половин после раунда шифрования.
     fn encryption_round(&self, input_left: u32, input_right: u32, round_key: u32) -> (u32, u32) {
         let output_left = input_right;
         let output_right = input_left ^ self.f(input_right, round_key);
         (output_left, output_right)
     }
 
+    // Выполняет один раунд расшифрования. Аналогичен `encryption_round`,
+    // но использует обратный порядок раундовых ключей.
     fn decryption_round(&self, input_left: u32, input_right: u32, round_key: u32) -> (u32, u32) {
         let output_right = input_left;
         let output_left = input_right ^ self.f(input_left, round_key);
         (output_left, output_right)
     }
 
+    // Шифрует 64-битный блок данных (`block`) с использованием заданного ключа (`key`).
+    // Выполняет 32 раунда шифрования.
     fn encrypt(&self, block: u64, key: &[u32; 8]) -> u64 {
         let mut left = (block >> 32) as u32;
         let mut right = (block & 0xFFFFFFFF) as u32;
@@ -60,6 +72,8 @@ impl GostCypher {
         ((left as u64) << 32) | (right as u64)
     }
 
+    // Расшифровывает 64-битный блок данных (`block`) с использованием заданного ключа (`key`).
+    // Выполняет 32 раунда расшифрования с обратным порядком раундовых ключей.
     fn decrypt(&self, block: u64, key: &[u32; 8]) -> u64 {
         let mut left = (block >> 32) as u32;
         let mut right = (block & 0xFFFFFFFF) as u32;
@@ -85,8 +99,8 @@ mod tests {
         let cipher = GostCypher::new();
         let data = 0xb202da8a5342f0ac_u64; // 64-bit block
         let key = [
-            0xFFFFFFFF, 0x12345678, 0x00120477, 0x77AE441F,
-            0x81C63123, 0x99DEEEEE, 0x09502978, 0x68FA3105,
+            0xFFFFFFFF, 0x12345678, 0x00120477, 0x77AE441F, 0x81C63123, 0x99DEEEEE, 0x09502978,
+            0x68FA3105,
         ];
 
         let g = 128 * 1024; // One MB
@@ -105,7 +119,10 @@ mod tests {
         println!("Average time per encryption: {:.10} seconds", duration);
         println!(
             "Text: {:#x}\nCiphertext: {:#x}\nDecrypted text: {:#x}\nMatch: {}",
-            data, encrypted, decrypted, data == decrypted
+            data,
+            encrypted,
+            decrypted,
+            data == decrypted
         );
     }
 }

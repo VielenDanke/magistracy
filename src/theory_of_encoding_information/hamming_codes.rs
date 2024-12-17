@@ -45,6 +45,7 @@ pub fn encode(bits: Vec<u8>) -> Vec<Vec<u8>> {
     let row_len = matrix.len();
     let mut init_vector = matrix[0].clone();
     let mut bit_index = 0;
+
     for row in 1..row_len {
         let mut sum = 0;
         let mut row_vector = &matrix[row];
